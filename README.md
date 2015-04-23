@@ -5,6 +5,7 @@ Examples:
 
 Cacheless GET
 
+    NSString *url = @"https://api.github.com/users/bibomain";
     [SimpleNetworking getJsonCachelessFromURL:url param:nil returned:^(id responseObject, NSError *error) {
         if (error) {
             NSLog(@"error: %@", error.localizedDescription);
@@ -28,13 +29,18 @@ Cacheless GET image
         }
     }];
 
+Set header
+
+    NSDictionary *headerParams = @{@"token":@"something"};
+    [SimpleNetworking shared].headerFields = headerParams;
+
 Currently available:
 
-Cached GET
-Cacheless GET
-Cached GET image
-Cacheless GET image
-Cacheless POST
-Cacheless POST image
-Cacheless PUT
-Cacheless DELETE
+Cached GET<br>
+Cacheless GET<br>
+Cached GET image<br>
+Cacheless GET image<br>
+Cacheless POST<br>
+Cacheless POST image<br>
+Cacheless PUT<br>
+Cacheless DELETE<br>
