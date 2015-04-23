@@ -1,4 +1,7 @@
 # SimpleNetworking
+
+Feel free to just copy it and make it [whatever]Networking
+
 A simple wrapper for making network calls, just one class to import
 
 Examples:
