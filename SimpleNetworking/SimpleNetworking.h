@@ -15,6 +15,8 @@
 @property (nonatomic, retain) NSString *imageName;
 @property (nonatomic, retain) NSString *imageExtension;
 
++ (SimpleNetworking *)shared;
+
 + (void)getJsonFromURL:(NSString *)urlString param:(NSDictionary *)param cachePolicy:(NSURLRequestCachePolicy)cachePolicy cacheTimeout:(NSTimeInterval)interval returned:(void (^)(id responseObject, NSError *error))callback;
 
 + (void)getJsonCachelessFromURL:(NSString *)urlString param:(NSDictionary *)param returned:(void (^)(id responseObject, NSError *error))callback;
