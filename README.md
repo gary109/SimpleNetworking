@@ -1,6 +1,6 @@
 # SimpleNetworking
 
-Feel free to just copy it and make it [whatever]Networking
+Networking for Apple Watch, extensions, or other simple requests
 
 A simple wrapper for making network calls, just one class to import
 
