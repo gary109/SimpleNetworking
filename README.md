@@ -6,7 +6,7 @@ Just one class to import
 
 Examples:
 
-#### 'GET' Stripe token
+#### `POST` for Stripe token
 
     NSString *url = @"https://api.stripe.com/v1/tokens";
     NSDictionary *param = @{@"card[number]":@"4242424242424242",@"card[exp_month]":@"12",@"card[exp_year]":@"2016",@"card[cvc]":@"123"}
@@ -50,7 +50,7 @@ Examples:
 
 #### `Set header`
 
-    NSDictionary *headerParams = @{@"token":@"something"};
+    NSDictionary *headerParams = @{@"key":@"value"};
     [SimpleNetworking shared].headerFields = headerParams;
 
 Currently available:
