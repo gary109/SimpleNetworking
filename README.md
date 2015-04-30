@@ -1,9 +1,12 @@
 # SimpleNetworking
-A simple wrapper for making network calls, just one class to import
+
+Networking for Apple Watch, extensions, or other simple requests
+
+Just one class to import
 
 Examples:
 
-Cacheless GET
+#### `GET` Cacheless
 
     NSString *url = @"https://api.github.com/users/bibomain";
     [SimpleNetworking getJsonCachelessFromURL:url param:nil returned:^(id responseObject, NSError *error) {
@@ -14,8 +17,8 @@ Cacheless GET
             NSLog(@"%@", responseObject);
         }
     }];
-    
-Cacheless GET image
+
+#### `GET` Cacheless `image`
 
     NSString *url = @"https://avatars.githubusercontent.com/u/7190067?v=3";
     [SimpleNetworking getImageCachelessFromURL:url param:nil returned:^(UIImage *responseImage, NSError *error) {
@@ -29,7 +32,7 @@ Cacheless GET image
         }
     }];
 
-Set header
+#### `Set header`
 
     NSDictionary *headerParams = @{@"token":@"something"};
     [SimpleNetworking shared].headerFields = headerParams;
