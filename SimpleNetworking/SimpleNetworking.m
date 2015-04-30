@@ -102,8 +102,8 @@
     }
     
     if (headerFields.allKeys.count > 0) {
-        for (int i = 0; i < headerFields.allKeys.count; i++) {
-            [urlRequest setValue:headerFields.allKeys[i] forHTTPHeaderField:headerFields.allValues[i]];
+        for (int i = 0; i < (int)headerFields.allKeys.count; i++) {
+            [urlRequest setValue:headerFields.allValues[i] forHTTPHeaderField:headerFields.allKeys[i]];
         }
     }
     
@@ -131,7 +131,6 @@
     }
     
     urlRequest.HTTPBody = jsonData;
-    
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
     [NSURLConnection sendAsynchronousRequest:urlRequest queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error)
      {
@@ -145,17 +144,17 @@
                          callback([UIImage imageWithData:data], nil);
                      }
                      else if ([type isEqualToString:@"POST"]) {
-                         NSError* error;
+                         NSError* error2;
                          callback([NSJSONSerialization JSONObjectWithData:data
                                                                   options:kNilOptions
-                                                                    error:&error],nil);
+                                                                    error:&error2],nil);
                      }
                  }
                  else {
-                     NSError* error;
+                     NSError* error2;
                      callback([NSJSONSerialization JSONObjectWithData:data
                                                               options:kNilOptions
-                                                                error:&error],nil);
+                                                                error:&error2],nil);
                  }
              }
          });
