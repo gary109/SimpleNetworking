@@ -6,6 +6,22 @@ Just one class to import
 
 Examples:
 
+#### `POST` for Stripe token
+
+    NSString *url = @"https://api.stripe.com/v1/tokens";
+    NSDictionary *param = @{@"card[number]":@"4242424242424242",@"card[exp_month]":@"12",@"card[exp_year]":@"2016",@"card[cvc]":@"123"}
+    
+    [SimpleNetworking shared].headerFields = @{@"Authorization":@" Bearer yourtoken"};
+
+    [SimpleNetworking postJsonToURL:url param:param returned:^(id responseObject, NSError *error) {
+        if (error) {
+            NSLog(@"error %@", error.localizedDescription);
+                  }
+        else {
+            NSLog(@"%@", responseObject);
+        }
+    }];
+
 #### `GET` Cacheless
 
     NSString *url = @"https://api.github.com/users/bibomain";
@@ -34,7 +50,7 @@ Examples:
 
 #### `Set header`
 
-    NSDictionary *headerParams = @{@"token":@"something"};
+    NSDictionary *headerParams = @{@"key":@"value"};
     [SimpleNetworking shared].headerFields = headerParams;
 
 Currently available:
