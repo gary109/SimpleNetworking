@@ -132,33 +132,41 @@
     
     urlRequest.HTTPBody = jsonData;
     NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-    [NSURLConnection sendAsynchronousRequest:urlRequest queue:queue completionHandler:^(NSURLResponse *response, NSData *data, NSError *error)
-     {
-         dispatch_sync(dispatch_get_main_queue(), ^{
-             if (error) {
-                 callback(nil, error);
-             }
-             else {
-                 if (isImage) {
-                     if ([type isEqualToString:@"GET"]) {
-                         callback([UIImage imageWithData:data], nil);
-                     }
-                     else if ([type isEqualToString:@"POST"]) {
-                         NSError* error2;
-                         callback([NSJSONSerialization JSONObjectWithData:data
-                                                                  options:kNilOptions
-                                                                    error:&error2],nil);
-                     }
-                 }
-                 else {
-                     NSError* error2;
-                     callback([NSJSONSerialization JSONObjectWithData:data
-                                                              options:kNilOptions
-                                                                error:&error2],nil);
-                 }
-             }
-         });
-     }];
+    NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    sessionConfig.requestCachePolicy = cachePolicy;
+    NSURLSession *urlSession = [NSURLSession sessionWithConfiguration:sessionConfig delegate:self delegateQueue:queue];
+    NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:urlRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            if (error) {
+                callback(nil, error);
+            }
+            else {
+                if (isImage) {
+                    if ([type isEqualToString:@"GET"]) {
+                        callback([UIImage imageWithData:data], nil);
+                    }
+                    else if ([type isEqualToString:@"POST"]) {
+                        NSError* error2;
+                        callback([NSJSONSerialization JSONObjectWithData:data
+                                                                 options:kNilOptions
+                                                                   error:&error2],nil);
+                    }
+                }
+                else {
+                    NSError* error2;
+                    callback([NSJSONSerialization JSONObjectWithData:data
+                                                             options:kNilOptions
+                                                               error:&error2],nil);
+                }
+            }
+        });
+    }];
+    [dataTask resume];
+}
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
+{
+    completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
 }
 
 -(NSString *)getParamInString:(NSDictionary *)param {

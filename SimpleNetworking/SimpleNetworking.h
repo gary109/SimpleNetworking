@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@interface SimpleNetworking : NSObject
+@interface SimpleNetworking : NSObject <NSURLSessionDelegate>
 
 @property (nonatomic, retain) NSDictionary *headerFields;
 @property (nonatomic, retain) NSString *imageName;
