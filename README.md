@@ -53,6 +53,13 @@ Examples:
     NSDictionary *headerParams = @{@"key":@"value"};
     [SimpleNetworking shared].headerFields = headerParams;
 
+#### `Customize security`
+
+    - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
+    {
+        completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
+    }
+
 Currently available:
 
 Cached GET<br>
