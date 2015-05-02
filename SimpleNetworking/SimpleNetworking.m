@@ -25,8 +25,16 @@
     self = [super init];
     if (self) {
         headerFields = [NSDictionary new];
+        [SimpleNetworking setCacheSizeMemoryCapacityInMB:16 diskCapacity:32];
+        //default, will be overwritten if setCacheSizeMemoryCapacityInMB is set in your project
     }
     return self;
+}
+
++ (void)setCacheSizeMemoryCapacityInMB:(int)memoryCapacityInMB diskCapacity:(int)diskCapacityInMB {
+    int memoryCapacity = memoryCapacityInMB*1024*1024;
+    int diskCapacity = diskCapacityInMB*1024*1024;
+    [NSURLCache setSharedURLCache:[[NSURLCache alloc]initWithMemoryCapacity:memoryCapacity diskCapacity:diskCapacity diskPath:nil]];
 }
 
 + (void)getJsonFromURL:(NSString *)urlString param:(NSDictionary *)param cachePolicy:(NSURLRequestCachePolicy)cachePolicy cacheTimeout:(NSTimeInterval)interval returned:(void (^)(id responseObject, NSError *error))callback {
@@ -83,14 +91,101 @@
 
 -(void)NSURLConnectionSendAsynchronousRequestWithType:(NSString *)type url:(NSString *)url param:(NSDictionary *)param isImage:(BOOL)isImage cachePolicy:(NSURLRequestCachePolicy)cachePolicy cacheTimeout:(NSTimeInterval)interval imageInNSData:(NSData *)imageInNSData returned:(void (^)(id responseObject, NSError *error))callback {
     
-    NSString *urlString = url;
+    if (_allowWorkingOffline) {
+        cachePolicy = NSURLRequestReturnCacheDataDontLoad;
+    }
     
+    NSString *urlString = [self formattedUrlStringWithURL:url param:param isImage:isImage type:type];
+    NSMutableURLRequest *urlRequest = [self addToURLRequestWithURLString:urlString Type:type param:param cachePolicy:cachePolicy cacheTimeout:interval imageInNSData:imageInNSData isImage:isImage];
+    
+    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
+    NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    if ([type isEqualToString:@"GET"]) {
+        sessionConfig.requestCachePolicy = cachePolicy;
+        sessionConfig.URLCache = [NSURLCache sharedURLCache];
+    }
+    NSURLSession *urlSession = [NSURLSession sessionWithConfiguration:sessionConfig delegate:self delegateQueue:queue];
+    __block NSCachedURLResponse *cachedURLResponse = [[NSURLCache sharedURLCache] cachedResponseForRequest:urlRequest];
+    __block NSData *responseData;
+    
+    if (cachePolicy == NSURLRequestReturnCacheDataElseLoad) {
+        if(cachedURLResponse && cachedURLResponse != (id)[NSNull null]) {
+            responseData = [cachedURLResponse data];
+            if (isImage) {
+                if ([type isEqualToString:@"GET"]) {
+                    callback([UIImage imageWithData:responseData], nil);
+                    return;
+                }
+            }
+            NSError* error2;
+            callback([NSJSONSerialization JSONObjectWithData:responseData
+                                                     options:kNilOptions
+                                                       error:&error2],nil);
+        }
+        else {
+            NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:urlRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    if (error) {
+                        callback(nil, error);
+                    }
+                    else {
+                        cachedURLResponse = [[NSCachedURLResponse alloc] initWithResponse:response data:data userInfo:nil storagePolicy:NSURLCacheStorageAllowed];
+                        [[NSURLCache sharedURLCache] storeCachedResponse:cachedURLResponse forRequest:urlRequest];
+                    }
+                    
+                    if (isImage) {
+                        if ([type isEqualToString:@"GET"]) {
+                            callback([UIImage imageWithData:data], nil);
+                            return;
+                        }
+                    }
+                    NSError* error2;
+                    callback([NSJSONSerialization JSONObjectWithData:data
+                                                             options:kNilOptions
+                                                               error:&error2],nil);
+                });
+            }];
+            [dataTask resume];
+        }
+    }
+    else {
+        [[NSURLCache sharedURLCache]removeCachedResponseForRequest:urlRequest];
+        NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:urlRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                if (error) {
+                    callback(nil, error);
+                }
+                if (isImage) {
+                    if ([type isEqualToString:@"GET"]) {
+                        callback([UIImage imageWithData:data], nil);
+                        return;
+                    }
+                }
+                NSError* error2;
+                callback([NSJSONSerialization JSONObjectWithData:data
+                                                         options:kNilOptions
+                                                           error:&error2],nil);
+            });
+        }];
+        [dataTask resume];
+    }
+}
+
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
+{
+    completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
+}
+
+-(NSString *)formattedUrlStringWithURL:(NSString *)url param:(NSDictionary *)param isImage:(BOOL)isImage type:(NSString *)type {
+    NSString *urlString = url;
     if (param && isImage && [type isEqualToString:@"POST"]) {
         urlString = [NSString stringWithFormat:@"%@?%@", url, [self getParamInString:param]];
     }
-    
+    return urlString;
+}
+
+-(NSMutableURLRequest *)addToURLRequestWithURLString:(NSString *)urlString Type:(NSString *)type param:(NSDictionary *)param cachePolicy:(NSURLRequestCachePolicy)cachePolicy cacheTimeout:(NSTimeInterval)interval imageInNSData:(NSData *)imageInNSData isImage:(BOOL)isImage{
     NSMutableURLRequest *urlRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:urlString]];
-    
     [urlRequest setHTTPMethod:type];
     if ([type isEqualToString:@"GET"]) {
         [urlRequest setCachePolicy:cachePolicy];
@@ -131,42 +226,7 @@
     }
     
     urlRequest.HTTPBody = jsonData;
-    NSOperationQueue *queue = [[NSOperationQueue alloc] init];
-    NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration ephemeralSessionConfiguration];
-    sessionConfig.requestCachePolicy = cachePolicy;
-    NSURLSession *urlSession = [NSURLSession sessionWithConfiguration:sessionConfig delegate:self delegateQueue:queue];
-    NSURLSessionDataTask *dataTask = [urlSession dataTaskWithRequest:urlRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            if (error) {
-                callback(nil, error);
-            }
-            else {
-                if (isImage) {
-                    if ([type isEqualToString:@"GET"]) {
-                        callback([UIImage imageWithData:data], nil);
-                    }
-                    else if ([type isEqualToString:@"POST"]) {
-                        NSError* error2;
-                        callback([NSJSONSerialization JSONObjectWithData:data
-                                                                 options:kNilOptions
-                                                                   error:&error2],nil);
-                    }
-                }
-                else {
-                    NSError* error2;
-                    callback([NSJSONSerialization JSONObjectWithData:data
-                                                             options:kNilOptions
-                                                               error:&error2],nil);
-                }
-            }
-        });
-    }];
-    [dataTask resume];
-}
-
-- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
-{
-    completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
+    return urlRequest;
 }
 
 -(NSString *)getParamInString:(NSDictionary *)param {

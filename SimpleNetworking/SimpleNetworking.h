@@ -9,13 +9,16 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-@interface SimpleNetworking : NSObject <NSURLSessionDelegate>
+@interface SimpleNetworking : NSObject <NSURLSessionDataDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate>
 
 @property (nonatomic, retain) NSDictionary *headerFields;
 @property (nonatomic, retain) NSString *imageName;
 @property (nonatomic, retain) NSString *imageExtension;
+@property (nonatomic) BOOL allowWorkingOffline;
 
 + (SimpleNetworking *)shared;
+
++ (void)setCacheSizeMemoryCapacityInMB:(int)memoryCapacity diskCapacity:(int)diskCapacity;
 
 + (void)getJsonFromURL:(NSString *)urlString param:(NSDictionary *)param cachePolicy:(NSURLRequestCachePolicy)cachePolicy cacheTimeout:(NSTimeInterval)interval returned:(void (^)(id responseObject, NSError *error))callback;
 

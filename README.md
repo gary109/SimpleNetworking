@@ -60,8 +60,6 @@ Examples:
         completionHandler(NSURLSessionAuthChallengeUseCredential, [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust]);
     }
 
-Currently available:
-
 Cached GET<br>
 Cacheless GET<br>
 Cached GET image<br>
