@@ -58,6 +58,10 @@ Examples:
     Use only cache when internet is not available
     [SimpleNetworking shared].allowWorkingOffline = true;
 
+#### `Custom cache size`
+    
+    [SimpleNetworking setCacheSizeMemoryCapacityInMB:16 diskCapacity:32];
+
 #### `Customize security`
 
     - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
