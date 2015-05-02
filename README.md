@@ -53,6 +53,11 @@ Examples:
     NSDictionary *headerParams = @{@"key":@"value"};
     [SimpleNetworking shared].headerFields = headerParams;
 
+#### `Offline mode`
+    
+    Use only cache when internet is not available
+    [SimpleNetworking shared].allowWorkingOffline = true;
+
 #### `Customize security`
 
     - (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential *))completionHandler
