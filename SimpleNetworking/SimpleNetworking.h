@@ -6,6 +6,8 @@
 //  Copyright (c) 2015 Bibo. All rights reserved.
 //
 
+//  version 1.0
+
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
